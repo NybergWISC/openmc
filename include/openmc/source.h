@@ -82,6 +82,7 @@ private:
   UPtrAngle angle_;                               //!< Angular distribution
   UPtrDist energy_;                               //!< Energy distribution
   UPtrDist time_;                                 //!< Time distribution
+  bool mesh_type_ {false};                         //!< Boolean for mesh sampling
 };
 
 //==============================================================================

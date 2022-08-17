@@ -19,6 +19,8 @@ public:
 
   //! Sample a position from the distribution
   virtual Position sample(uint64_t* seed) const = 0;
+
+  virtual std::pair<Position, int32_t> mesh_sample(uint64_t* seed) const = 0;
 };
 
 //==============================================================================
@@ -105,8 +107,12 @@ public:
 
   //! Sample a position from the distribution
   //! \param seed Pseudorandom number seed pointer
-  //! \return Sampled position
+  //! \return pair of <Sampled position, sampled element index>
+  std::pair<Position, int32_t> mesh_sample(uint64_t* seed) const;
+
   Position sample(uint64_t* seed) const;
+
+  int32_t tot_source_bins() const;
 
 private:
   Mesh* mesh_ptr_;

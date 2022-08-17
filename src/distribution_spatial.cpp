@@ -241,8 +241,22 @@ Position MeshSpatial::sample(uint64_t* seed) const
   // Create random variable for sampling element from mesh
   float eta = prn(seed);
   // Sample over the CDF defined in initialization above
-  int32_t tet_bin = lower_bound_index(mesh_CDF_.begin(), mesh_CDF_.end(), eta);
-  return mesh_ptr_->sample(seed, tet_bin);
+  int32_t elem_idx = lower_bound_index(mesh_CDF_.begin(), mesh_CDF_.end(), eta);
+  return mesh_ptr_->sample(seed, elem_idx);
+}
+
+std::pair<Position, int32_t> MeshSpatial::mesh_sample(uint64_t* seed) const
+{ 
+  // Create random variable for sampling element from mesh
+  float eta = prn(seed);
+  // Sample over the CDF defined in initialization above
+  int32_t elem_idx = lower_bound_index(mesh_CDF_.begin(), mesh_CDF_.end(), eta);
+  return std::make_pair(mesh_ptr_->sample(seed, elem_idx), elem_idx);
+}
+
+int32_t MeshSpatial::tot_source_bins() const
+{
+  return tot_bins_;
 }
 
 

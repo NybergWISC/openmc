@@ -135,6 +135,9 @@ IndependentSource::IndependentSource(pugi::xml_node node)
     if (check_for_node(node, "energy")) {
       pugi::xml_node node_dist = node.child("energy");
       energy_ = distribution_from_xml(node_dist);
+      if (get_node_value_bool(node_dist, "decay_mesh_energy")){
+        mesh_type_ = true;
+      }
     } else {
       // Default to a Watt spectrum with parameters 0.988 MeV and 2.249 MeV^-1
       energy_ = UPtrDist {new Watt(0.988e6, 2.249e-6)};
@@ -158,13 +161,24 @@ SourceSite IndependentSource::sample(uint64_t* seed) const
   // Repeat sampling source location until a good site has been found
   bool found = false;
   int n_reject = 0;
+  bool decay_energy_source = false;
   static int n_accept = 0;
+  int32_t mesh_idx = 0;
+  if (mesh_type_) {
+    decay_energy_source = true;
+  }
   while (!found) {
     // Set particle type
     site.particle = particle_;
 
     // Sample spatial distribution
-    site.r = space_->sample(seed);
+    if (!mesh_type_){
+      site.r = space_->sample(seed);
+    } else {
+       std::pair<Position, int32_t> mesh_pair = space_->mesh_sample(seed);
+       site.r = std::get<0>(mesh_pair);
+       mesh_idx = std::get<1>(mesh_pair);
+    } 
 
     // Now search to see if location exists in geometry
     int32_t cell_index, instance;
@@ -211,6 +225,9 @@ SourceSite IndependentSource::sample(uint64_t* seed) const
 
   // Check for monoenergetic source above maximum particle energy
   auto p = static_cast<int>(particle_);
+  if (mesh_type_){
+    energy_ = model::external_sources[mesh_idx+1].get().energy()
+  }
   auto energy_ptr = dynamic_cast<Discrete*>(energy_.get());
   if (energy_ptr) {
     auto energies = xt::adapt(energy_ptr->x());
